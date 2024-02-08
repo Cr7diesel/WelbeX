@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  welbex:
+    build: ./welbex
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    volumes:
+      - ./welbex/:/app/
+    ports:
+      - 8001:8000
+    environment:
+      - DATABASE_URI=postgresql://db_username:db_password@welbex_db/db_name
+    depends_on:
+      - welbex_db
+
+  welbex_db:
+    image: postgres:16-alpine3.18
+    volumes:
+      - postgres_data_welbex:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=db_username
+      - POSTGRES_PASSWORD=db_password
+      - POSTGRES_DB=db_name
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx_config.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - welbex_db
+
+volumes:
+  postgres_data_welbex:
